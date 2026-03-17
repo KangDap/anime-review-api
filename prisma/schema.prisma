@@ -11,3 +11,36 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  reviews   Review[]
+}
+
+model Anime {
+  id          Int      @id @default(autoincrement())
+  title       String
+  synopsis    String
+  genre       String
+  releaseYear Int
+  createdAt   DateTime @default(now())
+
+  reviews     Review[]
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  userId  Int
+  animeId Int
+
+  user  User  @relation(fields: [userId], references: [id])
+  anime Anime @relation(fields: [animeId], references: [id])
+}
