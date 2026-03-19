@@ -12,13 +12,21 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  username  String
-  email     String   @unique
-  createdAt DateTime @default(now())
+enum UserRole {
+  USER
+  ADMIN
+}
 
-  reviews   Review[]
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String
+  role          UserRole @default(USER)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviews       Review[]
 }
 
 model Anime {
