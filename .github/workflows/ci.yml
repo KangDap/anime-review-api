@@ -1,0 +1,62 @@
+name: Continuous Integration
+run-name: CI for commit ${{ github.sha }} by @${{ github.actor }}
+
+on:
+    pull_request:
+        branches: [develop, main]
+    push:
+        branches: [develop, main]
+
+env:
+    DATABASE_URL: postgresql://postgres:password@localhost:5432/test_db
+
+jobs:
+    quality-check:
+        name: Unit Testing
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:16
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: password
+                    POSTGRES_DB: test_db
+                ports: 
+                    - 5432:5432
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                version: 10
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: 20
+                cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install
+
+            - name: Lint Check
+              run: pnpm lint
+
+            - name: Prettier Check
+              run: pnpm format:check
+
+            - name: Generate Prisma Client
+              run: pnpm prisma generate
+
+            - name: Run Database Migration
+              run: pnpm prisma migrate deploy
+
+            - name: Run unit tests
+              run: pnpm run test:run
+
+            - name: Build
+              run: pnpm run build
