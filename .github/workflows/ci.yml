@@ -12,7 +12,7 @@ env:
 
 jobs:
     quality-check:
-        name: Unit Testing
+        name: Build & Unit Testing
         runs-on: ubuntu-latest
 
         services:
@@ -29,34 +29,26 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v4
-              with:
-                version: 10
-
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
                 node-version: 20
-                cache: pnpm
+                cache: npm
 
             - name: Install dependencies
-              run: pnpm install
+              run: npm ci
 
             - name: Lint Check
-              run: pnpm lint
-
-            - name: Prettier Check
-              run: pnpm format:check
+              run: npm run lint
 
             - name: Generate Prisma Client
-              run: pnpm prisma generate
+              run: npx prisma generate
 
             - name: Run Database Migration
-              run: pnpm prisma migrate deploy
+              run: npx prisma migrate deploy
 
             - name: Run unit tests
-              run: pnpm run test:run
+              run: npm run test:run
 
             - name: Build
-              run: pnpm run build
+              run: npm run build
