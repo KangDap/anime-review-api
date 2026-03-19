@@ -12,8 +12,9 @@ function parsePositiveInt(value: string | null, fallback: number): number {
 // GET /api/users
 export async function GET(request: NextRequest) {
   try {
-    // Policy: any logged-in user can access user list.
-    const auth = requireAuth(request);
+    // Policy: only admin can access user list.
+    // NOTE - to change so any logged-in users could see this endpoint, just delete second param in requireAuth function 'v')b
+    const auth = requireAuth(request, { adminOnly: true });
     if (auth.response) {
       return auth.response;
     }
