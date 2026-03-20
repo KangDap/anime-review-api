@@ -200,4 +200,164 @@ describe('Auth Endpoint Main Paths', () => {
     });
     expect(authorizedBody.data[0].passwordHash).toBeUndefined();
   });
+
+  it('get user by id unauthorized + self + forbidden + admin', async () => {
+    const { GET: getUserById } = await import('@/app/api/users/[id]/route');
+    const { signToken } = await import('@/lib/auth');
+
+    const unauthorizedReq = new Request('http://localhost/api/users/2', {
+      method: 'GET',
+    });
+
+    const unauthorizedRes = await getUserById(unauthorizedReq as never, {
+      params: Promise.resolve({ id: '2' }),
+    });
+    expect(unauthorizedRes.status).toBe(401);
+
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: 2,
+      username: 'member_2',
+      email: 'member2@example.com',
+      role: 'USER',
+      createdAt: new Date('2026-03-20T00:00:00Z'),
+      updatedAt: new Date('2026-03-20T00:00:00Z'),
+    });
+
+    const selfToken = signToken({
+      userId: 2,
+      email: 'member2@example.com',
+      role: 'USER',
+    });
+
+    const selfReq = new Request('http://localhost/api/users/2', {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${selfToken}`,
+      },
+    });
+
+    const selfRes = await getUserById(selfReq as never, {
+      params: Promise.resolve({ id: '2' }),
+    });
+    expect(selfRes.status).toBe(200);
+
+    const selfBody = await selfRes.json();
+    expect(selfBody).toMatchObject({
+      id: 2,
+      username: 'member_2',
+      email: 'member2@example.com',
+      role: 'USER',
+    });
+    expect(selfBody.passwordHash).toBeUndefined();
+
+    const otherUserToken = signToken({
+      userId: 3,
+      email: 'member3@example.com',
+      role: 'USER',
+    });
+
+    const forbiddenReq = new Request('http://localhost/api/users/2', {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${otherUserToken}`,
+      },
+    });
+
+    const forbiddenRes = await getUserById(forbiddenReq as never, {
+      params: Promise.resolve({ id: '2' }),
+    });
+    expect(forbiddenRes.status).toBe(403);
+
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      id: 2,
+      username: 'member_2',
+      email: 'member2@example.com',
+      role: 'USER',
+      createdAt: new Date('2026-03-20T00:00:00Z'),
+      updatedAt: new Date('2026-03-20T00:00:00Z'),
+    });
+
+    const adminToken = signToken({
+      userId: 1,
+      email: 'admin@example.com',
+      role: 'ADMIN',
+    });
+
+    const adminReq = new Request('http://localhost/api/users/2', {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${adminToken}`,
+      },
+    });
+
+    const adminRes = await getUserById(adminReq as never, {
+      params: Promise.resolve({ id: '2' }),
+    });
+    expect(adminRes.status).toBe(200);
+
+    const adminBody = await adminRes.json();
+    expect(adminBody).toMatchObject({
+      id: 2,
+      username: 'member_2',
+      email: 'member2@example.com',
+      role: 'USER',
+    });
+    expect(adminBody.passwordHash).toBeUndefined();
+  });
+
+  it('get user by id invalid id returns 400', async () => {
+    const { GET: getUserById } = await import('@/app/api/users/[id]/route');
+    const { signToken } = await import('@/lib/auth');
+
+    const userToken = signToken({
+      userId: 2,
+      email: 'member2@example.com',
+      role: 'USER',
+    });
+
+    const req = new Request('http://localhost/api/users/not-a-number', {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`,
+      },
+    });
+
+    const res = await getUserById(req as never, {
+      params: Promise.resolve({ id: 'not-a-number' }),
+    });
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'Invalid user id',
+    });
+  });
+
+  it('get user by id returns 404 when user not found', async () => {
+    const { GET: getUserById } = await import('@/app/api/users/[id]/route');
+    const { signToken } = await import('@/lib/auth');
+
+    prismaMock.user.findUnique.mockResolvedValueOnce(null);
+
+    const adminToken = signToken({
+      userId: 1,
+      email: 'admin@example.com',
+      role: 'ADMIN',
+    });
+
+    const req = new Request('http://localhost/api/users/9999', {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${adminToken}`,
+      },
+    });
+
+    const res = await getUserById(req as never, {
+      params: Promise.resolve({ id: '9999' }),
+    });
+
+    expect(res.status).toBe(404);
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'User not found',
+    });
+  });
 });
