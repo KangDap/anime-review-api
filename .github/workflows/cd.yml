@@ -45,19 +45,32 @@ jobs:
 
       - name: Wait for app health
         run: |
-          for i in {1..30}; do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' anime-review-api 2>/dev/null || echo "starting")
-            if [ "$STATUS" = "healthy" ]; then
+          for i in {1..90}; do
+            RUNNING=$(docker inspect --format='{{.State.Running}}' anime-review-api 2>/dev/null || echo "false")
+            EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' anime-review-api 2>/dev/null || echo "unknown")
+            STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' anime-review-api 2>/dev/null || echo "missing")
+
+            if [ "$RUNNING" != "true" ]; then
+              echo "App container is not running (exit code: $EXIT_CODE)"
+              docker compose logs --no-color app db
+              exit 1
+            fi
+
+            if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then
               echo "App container is healthy"
               exit 0
             fi
+
             if [ "$STATUS" = "unhealthy" ]; then
               echo "App container is unhealthy"
               docker compose logs --no-color app db
               exit 1
             fi
+
+            echo "Waiting for health... current status: $STATUS"
             sleep 2
           done
+
           echo "Timed out waiting for healthy app container"
           docker compose logs --no-color app db
           exit 1
