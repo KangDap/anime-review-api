@@ -9,7 +9,8 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN JWT_SECRET=build-time-jwt-secret npm run build
+RUN DATABASE_URL=postgresql://postgres:postgres@localhost:5432/anime_review npx prisma generate
+RUN JWT_SECRET=dummy npm run build
 
 FROM node:22-alpine AS runner
 WORKDIR /app

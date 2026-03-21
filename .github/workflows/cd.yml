@@ -28,7 +28,7 @@ jobs:
 
       - name: Start compose stack
         env:
-          JWT_SECRET: ci-jwt-secret
+          JWT_SECRET: ${{ secrets.JWT_SECRET_CI || 'dummy' }}
           POSTGRES_DB: anime_review
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
