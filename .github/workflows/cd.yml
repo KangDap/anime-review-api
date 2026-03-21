@@ -43,12 +43,11 @@ jobs:
           APP_PORT: 3000
         run: docker compose up -d --build
 
-      - name: Wait for app health
+      - name: Wait for app readiness
         run: |
           for i in {1..90}; do
             RUNNING=$(docker inspect --format='{{.State.Running}}' anime-review-api 2>/dev/null || echo "false")
             EXIT_CODE=$(docker inspect --format='{{.State.ExitCode}}' anime-review-api 2>/dev/null || echo "unknown")
-            STATUS=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' anime-review-api 2>/dev/null || echo "missing")
 
             if [ "$RUNNING" != "true" ]; then
               echo "App container is not running (exit code: $EXIT_CODE)"
@@ -56,22 +55,17 @@ jobs:
               exit 1
             fi
 
-            if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "none" ]; then
-              echo "App container is healthy"
+            HTTP_CODE=$(curl -s -o /tmp/wait.txt -w "%{http_code}" http://localhost:3000/api/animes || echo "000")
+            if [ "$HTTP_CODE" -eq 200 ]; then
+              echo "App endpoint is ready"
               exit 0
             fi
 
-            if [ "$STATUS" = "unhealthy" ]; then
-              echo "App container is unhealthy"
-              docker compose logs --no-color app db
-              exit 1
-            fi
-
-            echo "Waiting for health... current status: $STATUS"
+            echo "Waiting for app readiness... current status code: $HTTP_CODE"
             sleep 2
           done
 
-          echo "Timed out waiting for healthy app container"
+          echo "Timed out waiting for app readiness"
           docker compose logs --no-color app db
           exit 1
 
