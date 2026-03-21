@@ -1,5 +1,5 @@
-name: Continuous Deployment
-run-name: CD for commit ${{ github.sha }} by @${{ github.actor }}
+name: Docker CI
+run-name: Docker CI for commit ${{ github.sha }} by @${{ github.actor }}
 
 on:
   pull_request:
