@@ -1,5 +1,8 @@
 # Anime Review API
 
+[![CI](https://github.com/KangDap/anime-review-api/actions/workflows/ci.yml/badge.svg)](https://github.com/KangDap/anime-review-api/actions/workflows/ci.yml)
+[![CI Docker](https://github.com/KangDap/anime-review-api/actions/workflows/docker-ci.yml/badge.svg)](https://github.com/KangDap/anime-review-api/actions/workflows/docker-ci.yml)
+
 Anime Review API is a basic RESTful API built with Next.js for anime catalog and review management, including JWT-based authentication.
 
 ## Tech Stack
