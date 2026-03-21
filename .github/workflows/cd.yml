@@ -26,9 +26,16 @@ jobs:
       - name: Build Docker image
         run: docker build -t anime-review-api:${{ github.sha }} .
 
+      - name: Create temporary .env for CI
+        run: |
+          cat > .env << 'EOF'
+          JWT_SECRET=dummy
+          JWT_EXPIRES_IN=24h
+          EOF
+
       - name: Start compose stack
         env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET_CI || 'dummy' }}
+          JWT_SECRET: dummy
           POSTGRES_DB: anime_review
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
