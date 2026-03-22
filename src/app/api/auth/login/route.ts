@@ -23,7 +23,7 @@ function validateLoginInput(body: LoginBody): string | null {
     return 'email and password are required';
   }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailPattern = /^[^@]+@[^@]+\.[^@]+$/;
   if (!emailPattern.test(trimmedEmail)) {
     return 'email must be a valid email address';
   }

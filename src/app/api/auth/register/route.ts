@@ -53,7 +53,7 @@ function validateRegisterInput(body: RegisterBody): string | null {
     return 'username can only contain letters, numbers, and underscores';
   }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailPattern = /^[^@]+@[^@]+\.[^@]+$/;
   if (!emailPattern.test(trimmedEmail)) {
     return 'email must be a valid email address';
   }
