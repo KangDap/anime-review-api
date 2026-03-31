@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (!title || !synopsis || !genre || !releaseYear) {
       return NextResponse.json(
         { error: 'title, synopsis, genre, and releaseYear are required' },
-        { status: 400 }
+        { status: 402 }
       );
     }
 
